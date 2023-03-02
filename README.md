@@ -1,2 +1,2 @@
-# Fitts-_Law
-CIS482 Fitts' Law Data Analysis 
+# Fitts_Law
+CIS482 Fitts' Law Data Analysis
