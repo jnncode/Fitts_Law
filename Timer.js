@@ -1,0 +1,1 @@
+// Times clicking intervals
