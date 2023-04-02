@@ -41,7 +41,7 @@ class Application(tk.Tk):
 class ConsentPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-
+        
         label_consent = Label(self,
         text=
         """
@@ -53,26 +53,24 @@ class ConsentPage(Frame):
         accurately and precisely within 32 trials. The data recorded will be stored into a database and be included in a report based on
         the demographic responses. The completion time will be between 5 to 10 minutes.""")
 
-        label_consent.grid(row=0, column=0)
-
+        # label_consent.grid(row=0, column=0, sticky="nsew")
+        label_consent.place(relx=0.5, rely=0.4, anchor="center")
         self.columnconfigure(0, minsize=1000, weight=6)
         self.rowconfigure(0, minsize=600, weight=6)
 
         def clickAgree():
             master.changePage(QuestionPage)
 
-        mb_agree = Button(self, text="I Agree", relief=RAISED, command=clickAgree)  # Add command Agree
+        mb_agree = Button(self, text="I Agree", relief=RAISED,  width=7, height=1, command=clickAgree)
         mb_agree.menu = Menu(mb_agree, tearoff=0)
-        mb_agree.grid(row=1, column=0)
+        mb_agree.grid(row=1, column=0, sticky="ns", pady=8)
 
         def clickDisagree():
             self.quit()
 
-        mb_disagree = Button(self, text="I Decline", relief=RAISED, command=clickDisagree)
+        mb_disagree = Button(self, text="I Decline", relief=RAISED, width=7, height=1, command=clickDisagree)
         mb_disagree.menu = Menu(mb_disagree, tearoff=0)
-        mb_disagree.grid()
-        self.rowconfigure(2, minsize=100, weight=6)
-
+        mb_disagree.grid(row=2, column=0, sticky="ns", pady=8)
 
 # List of questions in one page and must be required fields before proceeding 
 class QuestionPage(Frame):
@@ -97,10 +95,9 @@ class QuestionPage(Frame):
         age_entry = Entry(self)
         age_entry.grid(row=3, column=1, sticky="nsew")
 
-        gender = Label(self, text="Gender")
-        gender.grid(row=4, column=1, sticky="nsew")
+        gender_label = Label(self, text="Gender")
+        gender_label.grid(row=4, column=1, sticky="nsew")
 
-        gender_label = Label(self, text="Gender").grid(row=5, column=1, sticky="nsew")  
         gender_entry = Entry(self)
         gender_entry.grid(row=5, column=1, sticky="nsew")
 
@@ -155,9 +152,9 @@ class QuestionPage(Frame):
                 messagebox.showerror("Error", "Please fill out all required fields before submitting.")
 
         # Disable the submit button by default
-        mb_submit = Button(self, text="Submit", command=clickSubmit)
+        mb_submit = Button(self, text="Submit", width=7, height=1, command=clickSubmit)
         mb_submit.menu = Menu(mb_submit, tearoff=0)
-        mb_submit.grid(row=8, column=1, sticky="nsew")
+        mb_submit.grid(row=8, column=1, sticky="nsew", pady=20)
 
     # Pseudocode
     # Display CirclePage 
@@ -180,7 +177,7 @@ class InstructionPage(Frame):
         Any misclicks outside of the circles will effect the performance results.
         Progress will be visibly displayed on the top of the screen.""")
 
-        label_instruction.grid(row=0, column=0)
+        label_instruction.grid(row=0, column=0, sticky="nsew")
 
         self.columnconfigure(0, minsize=1000, weight=6)
         self.rowconfigure(0, minsize=600, weight=6)
@@ -190,7 +187,7 @@ class InstructionPage(Frame):
 
         mb_begin = Button(self, text="Begin", relief=RAISED, command=begin)  # Add command Agree
         mb_begin.menu = Menu(mb_begin, tearoff=0)
-        mb_begin.grid(row=1, column=0)
+        mb_begin.grid(row=1, column=0, sticky="ns")
 
 
 # Colored circle for user to click (32 count) - ERROR FIX SOON
