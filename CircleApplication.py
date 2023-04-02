@@ -100,6 +100,7 @@ class QuestionPage(Frame):
         gender = Label(self, text="Gender")
         gender.grid(row=4, column=1, sticky="nsew")
 
+        gender_label = Label(self, text="Gender").grid(row=5, column=1, sticky="nsew")  
         gender_entry = Entry(self)
         gender_entry.grid(row=5, column=1, sticky="nsew")
 
@@ -115,8 +116,8 @@ class QuestionPage(Frame):
         def validate():
             # Check if age is valid
             try:
-                value1 = int(age_entry.get())
-                if value1 < 0 or value1 > 100:
+                value = int(age_entry.get())
+                if value < 0 or value > 100:
                     raise ValueError
             except ValueError:
                 messagebox.showerror("Error", "Please enter valid age between 0 and 100.")
@@ -169,15 +170,16 @@ class InstructionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
-        label_instruction = Message(
-            self,
-            text=
-                "Instructions\n\n\n" +
-               "Green circles will randomly generate within the screen." +
-               " Each circle must be clicked in order to proceed, and will be done 32 times." +
-               " Any misclicks outside of the circles will effect the performance results." +
-               " Progress will be visibly displayed on the top of the screen."
-        )
+        label_instruction = Label(self,
+        text=
+        """
+        Instructions
+            
+        Green circles will randomly generate within the screen. 
+        Each circle must be clicked in order to proceed, and will be done 32 times.
+        Any misclicks outside of the circles will effect the performance results.
+        Progress will be visibly displayed on the top of the screen.""")
+
         label_instruction.grid(row=0, column=0)
 
         self.columnconfigure(0, minsize=1000, weight=6)
