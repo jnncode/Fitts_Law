@@ -75,36 +75,61 @@ class QuestionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)  # add padding to the frame
         
+        # FIX - ID does not generate a new ID and remains the same P0001 rather than P000X + 1
         global participant_count
-        participant_count = 0
+        generated_ids = [] 
 
-        def generateId():
-            """Generates Participant ID"""
-            global participant_count
-            participant_count += 1
-            id = f"P{participant_count:04d}"
-            new_id = idRecord(id) # newly generated ID from previous ID
-            return new_id
-
-        def idRecord(id):
-            """Retrieves ID based off the existing ID information from CSV and returns new ID"""
+        def countIntervals():
             try:
                 with open("Fitts_Data.csv", "r", newline="") as file:
                     reader = csv.reader(file)
                     rows = list(reader)
-                    if len(rows) == 0:
-                        return "P0001" # set initial ID
-                    last_id = rows[-1][0] # last ID stored in CSV
-                    last_num = int(last_id[1:])
-                    new_num = last_num + 1
-                    new_id = f"P{new_num:04d}"
-                    return new_id
+                    global participant_count
+                    if len(rows) > 0:
+                        last_id = rows[-1][0]
+                        if len(last_id) == 6 and last_id.startswith("P") and last_id[1:].isdigit():
+                            participant_count = int(last_id[1:])
+                        else:
+                            participant_count = 0
+                    else:
+                        participant_count = 0
             except FileNotFoundError:
-                return id
+                participant_count = 0
+        
+        def generateId():
+            """Generates Participant ID"""
+            countIntervals()
+            global participant_count
+            participant_count += 1
+            new_id = f"P{participant_count:04d}"
+            generated_ids.append(new_id)
+            with open("Fitts_Data.csv", "a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([new_id])
+            return new_id 
+        
+        new_id = generateId()
 
-        generate_id = generateId()
+        def clickSubmit():
+            """Transfers information into CSV"""
+            if not validate():
+                return
 
-        id_label = Label(self, text=f"ID: {generate_id}")
+            age = age_entry.get()
+            gender = gender_entry.get()
+            hand = hand_entry.get()
+
+            # Store the data in CSV file (database)
+            with open("Fitts_Data.csv", mode="a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([new_id, age, gender, hand])
+
+            if validate():
+                master.changePage(InstructionPage)
+            else:
+                messagebox.showerror("Error", "Please fill out all required fields before submitting.")
+        
+        id_label = Label(self, text=f"ID: {new_id}")
         id_label.grid(row=1, column=1, sticky="nsew")
 
         age_label = Label(self, text="Age")
@@ -133,7 +158,7 @@ class QuestionPage(Frame):
             # Check if age is filled and valid
             try:
                 value = int(age_entry.get())
-                if value < 18 or value > 100:
+                if value < 18 or value > 100 or not age_entry.get():
                     raise ValueError
             except ValueError:
                 messagebox.showerror("Error", "Please enter valid age between 18 and 100 (must be 18 or older).")
@@ -141,38 +166,18 @@ class QuestionPage(Frame):
 
             # Check if gender is filled and valid
             gender = gender_entry.get().strip().casefold()
-            if gender not in ["male", "female", "other"]:
+            if gender not in ["male", "female", "other"] or not gender_entry.get():
                 messagebox.showerror("Error", "Please enter valid gender (male, female, or other).")
                 return False
 
             # Check if handedness is filled and valid
             handedness = hand_entry.get().strip().casefold()
-            if handedness not in ["left", "right", "l", "r"]:
+            if handedness not in ["left", "right"] or not hand_entry.get():
                 messagebox.showerror("Error", "Please enter valid handedness (left or right).")
                 return False
 
             # If all fields have been filled
             return True
-
-        def clickSubmit():
-            """Transfers information into CSV"""
-            if not validate():
-                return
-                
-            id = generateId()
-            age = age_entry.get()
-            gender = gender_entry.get()
-            hand = hand_entry.get()
-
-            # Store the data in CSV file (database)
-            with open("Fitts_Data.csv", mode="a", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerow([id, age, gender, hand])
-
-            if validate():
-                master.changePage(InstructionPage)
-            else:
-                messagebox.showerror("Error", "Please fill out all required fields before submitting.")
 
         # Disable the submit button by default
         mb_submit = Button(self, text="Submit", width=7, height=1, command=clickSubmit)
