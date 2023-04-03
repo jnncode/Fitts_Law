@@ -7,7 +7,6 @@ import pandas
 import random
 import csv
 
-
 # Main Window
 class Application(tk.Tk):
     def __init__(self):
@@ -53,8 +52,7 @@ class ConsentPage(Frame):
         accurately and precisely within 32 trials. The data recorded will be stored into a database and be included in a report based on
         the demographic responses. The completion time will be between 5 to 10 minutes.""")
 
-        # label_consent.grid(row=0, column=0, sticky="nsew")
-        label_consent.place(relx=0.5, rely=0.4, anchor="center")
+        label_consent.grid(row=0, column=0, sticky="nsew")
         self.columnconfigure(0, minsize=1000, weight=6)
         self.rowconfigure(0, minsize=600, weight=6)
 
@@ -72,17 +70,37 @@ class ConsentPage(Frame):
         mb_disagree.menu = Menu(mb_disagree, tearoff=0)
         mb_disagree.grid(row=2, column=0, sticky="ns", pady=8)
 
-# List of questions in one page and must be required fields before proceeding 
+# Lists ID, Age, Gender, and Handedness then transfers the information into the CSV file
 class QuestionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)  # add padding to the frame
+        
+        global participant_count
+        participant_count = 0
 
         def generateId():
+            """Generates Participant ID"""
             global participant_count
-            participant_count = 0
-            id = f'P{participant_count + 1:04d}'
             participant_count += 1
-            return id
+            id = f"P{participant_count:04d}"
+            new_id = idRecord(id) # newly generated ID from previous ID
+            return new_id
+
+        def idRecord(id):
+            """Retrieves ID based off the existing ID information from CSV and returns new ID"""
+            try:
+                with open("Fitts_Data.csv", "r", newline="") as file:
+                    reader = csv.reader(file)
+                    rows = list(reader)
+                    if len(rows) == 0:
+                        return "P0001" # set initial ID
+                    last_id = rows[-1][0] # last ID stored in CSV
+                    last_num = int(last_id[1:])
+                    new_num = last_num + 1
+                    new_id = f"P{new_num:04d}"
+                    return new_id
+            except FileNotFoundError:
+                return id
 
         generate_id = generateId()
 
@@ -111,13 +129,14 @@ class QuestionPage(Frame):
         self.rowconfigure(0, minsize=400, weight=1)
 
         def validate():
-            # Check if age is valid
+            """Validates the answers of questions"""
+            # Check if age is filled and valid
             try:
                 value = int(age_entry.get())
-                if value < 0 or value > 100:
+                if value < 18 or value > 100:
                     raise ValueError
             except ValueError:
-                messagebox.showerror("Error", "Please enter valid age between 0 and 100.")
+                messagebox.showerror("Error", "Please enter valid age between 18 and 100 (must be 18 or older).")
                 return False
 
             # Check if gender is filled and valid
@@ -126,7 +145,7 @@ class QuestionPage(Frame):
                 messagebox.showerror("Error", "Please enter valid gender (male, female, or other).")
                 return False
 
-            # Check if handedness is selected
+            # Check if handedness is filled and valid
             handedness = hand_entry.get().strip().casefold()
             if handedness not in ["left", "right", "l", "r"]:
                 messagebox.showerror("Error", "Please enter valid handedness (left or right).")
@@ -136,17 +155,21 @@ class QuestionPage(Frame):
             return True
 
         def clickSubmit():
+            """Transfers information into CSV"""
+            if not validate():
+                return
+                
+            id = generateId()
             age = age_entry.get()
             gender = gender_entry.get()
             hand = hand_entry.get()
 
             # Store the data in CSV file (database)
-            with open('Fitts_Data.csv', mode='a', newline='') as file:
+            with open("Fitts_Data.csv", mode="a", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow([id, age, gender, hand])
 
             if validate():
-                # messagebox.showinfo("Submitted.\nThank You!")
                 master.changePage(InstructionPage)
             else:
                 messagebox.showerror("Error", "Please fill out all required fields before submitting.")
@@ -161,7 +184,6 @@ class QuestionPage(Frame):
     # Begin trials and have Timer begin when user clicks on the Circle
     # Once trials are done
     # Navigate to ResultPage with a button or within a condition the trials are complete 
-
 
 class InstructionPage(Frame):
     def __init__(self, master=None):
@@ -183,7 +205,7 @@ class InstructionPage(Frame):
         self.rowconfigure(0, minsize=600, weight=6)
 
         def begin():
-            master.changePage(CirclePage)  # CirclePage - Commented due to Error
+            master.changePage()  # CirclePage - Commented due to Error
 
         mb_begin = Button(self, text="Begin", relief=RAISED, command=begin)  # Add command Agree
         mb_begin.menu = Menu(mb_begin, tearoff=0)
@@ -191,43 +213,41 @@ class InstructionPage(Frame):
 
 
 # Colored circle for user to click (32 count) - ERROR FIX SOON
-class CirclePage(Frame):
-    def __init__(self, canvas, master=None):
-        Frame.__init__(self, master)
-        # Check canvas object is tkinter.Canvas object
+# class CirclePage(Frame):
+#     def __init__(self, canvas, master=None):
+#         Frame.__init__(self, master)
+#         self.canvas = Canvas(master)
+#         if not isinstance(self.canvas, tk.Canvas):
+#             raise TypeError("canvas must be a tkinter.Canvas object.") # delete once done testing
+#         self.circle_radius = 20
+#         self.number_of_circles = 32
+#         self.circles = []
 
-        self.canvas = Canvas(master)
-        if not isinstance(self.canvas, tk.Canvas):
-            raise TypeError("canvas must be a tkinter.Canvas object")
-        self.circle_radius = 20
-        self.number_of_circles = 32
-        self.circles = []
+#         # Initialize the click counter and the list of click intervals
+#         click_count = 0
+#         click_intervals = []
 
-        # Initialize the click counter and the list of click intervals
-        click_count = 0
-        click_intervals = []
+#         def handle_click(event):
+#             """Handles clicks of circle(s)"""
+#             nonlocal click_count, click_intervals
+#             click_count += 1
+#             click_intervals.append(time.time() - start_time)
+#             canvas.delete(event.widget)
+#             if click_count == self.number_of_circles:
+#                 end_time = time.time()
+#                 print("Total Time: {:.2f} seconds".format(end_time - start_time))
+#                 print("Click Intervals:", click_intervals)
+#                 self.destroy()
 
-        # Define a function to handle a click on a circle
-        def handle_click(event):
-            nonlocal click_count, click_intervals
-            click_count += 1
-            click_intervals.append(time.time() - start_time)
-            canvas.delete(event.widget)
-            if click_count == self.number_of_circles:
-                end_time = time.time()
-                print("Total Time: {:.2f} seconds".format(end_time - start_time))
-                print("Click Intervals:", click_intervals)
-                self.destroy()
-
-        # Generate the circles
-        for i in range(self.number_of_circles):
-            x = random.randint(self.circle_radius, self.canvas.winfo_width() - self.circle_radius)
-            y = random.randint(self.circle_radius, self.canvas.winfo_height() - self.circle_radius)
-            circle = tk.Canvas.create_oval(x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius, fill="green")
-            canvas.tag_bind(circle, "<Button-1>", handle_click)
-            self.circles.append(circle)
-        # Start the timer
-        start_time = time.time()
+#         # Generate the circles
+#         for i in range(self.number_of_circles):
+#             x = random.randint(self.circle_radius, self.canvas.winfo_width() - self.circle_radius)
+#             y = random.randint(self.circle_radius, self.canvas.winfo_height() - self.circle_radius)
+#             circle = tk.Canvas.create_oval(x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius, fill="green")
+#             canvas.tag_bind(circle, "<Button-1>", handle_click)
+#             self.circles.append(circle)
+#         # Start the timer
+#         start_time = time.time()
 
 
 # After participants completed trials, populate results and close application
@@ -237,8 +257,16 @@ class ResultPage(Frame):
         Frame.__init__(self, master)
 
         # Testing - Results will populate for that specific participant and the data collected will be added onto the database (csv file) 
-        df = pandas.read_csv('Fitts_Data.csv')
-        print(df)
+        df = pandas.read_csv("Fitts_Data.csv")
+        print(df)               
+
+        def next():
+            master.changePage(ThankPage) 
+
+        
+        mb_next = Button(self, text="Next", relief=RAISED, command=next)  # Add command Agree
+        mb_next.menu = Menu(mb_next, tearoff=0)
+        mb_next.grid(row=1, column=0, sticky="ns")
 
 
 class ThankPage(Frame):
