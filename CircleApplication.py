@@ -221,10 +221,19 @@ class CirclePage(Frame):
 
         # Generate the circles
         for i in range(self.number_of_circles):
-            x = random.randint(self.circle_radius, self.canvas.winfo_width() - self.circle_radius)
-            y = random.randint(self.circle_radius, self.canvas.winfo_height() - self.circle_radius)
-            circle = tk.Canvas.create_oval(x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius, fill="green")
-            canvas.tag_bind(circle, "<Button-1>", handle_click)
+            x = random.randint(
+                self.canvas.winfo_width() - self.circle_radius,
+                self.circle_radius)
+            y = random.randint(
+                self.canvas.winfo_height() - self.circle_radius,
+                self.circle_radius)
+
+            circle = self.canvas.create_oval(
+                x - self.circle_radius, y - self.circle_radius,
+                x + self.circle_radius, y + self.circle_radius,
+                fill="green")
+
+            self.canvas.tag_bind(circle, "<Button-1>", handle_click)
             self.circles.append(circle)
         # Start the timer
         start_time = time.time()
