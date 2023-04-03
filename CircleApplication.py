@@ -213,42 +213,52 @@ class InstructionPage(Frame):
 
 
 # Colored circle for user to click (32 count) - ERROR FIX SOON
-# class CirclePage(Frame):
-#     def __init__(self, canvas, master=None):
-#         Frame.__init__(self, master)
-#         self.canvas = Canvas(master)
-#         if not isinstance(self.canvas, tk.Canvas):
-#             raise TypeError("canvas must be a tkinter.Canvas object.") # delete once done testing
-#         self.circle_radius = 20
-#         self.number_of_circles = 32
-#         self.circles = []
+class CirclePage(Frame):
+    def __init__(self, canvas, master=None):
+        Frame.__init__(self, master)
+        # Check canvas object is tkinter.Canvas object
 
-#         # Initialize the click counter and the list of click intervals
-#         click_count = 0
-#         click_intervals = []
+        self.canvas = Canvas(master)
+        if not isinstance(self.canvas, tk.Canvas):
+            raise TypeError("canvas must be a tkinter.Canvas object")
+        self.circle_radius = 20
+        self.number_of_circles = 32
+        self.circles = []
 
-#         def handle_click(event):
-#             """Handles clicks of circle(s)"""
-#             nonlocal click_count, click_intervals
-#             click_count += 1
-#             click_intervals.append(time.time() - start_time)
-#             canvas.delete(event.widget)
-#             if click_count == self.number_of_circles:
-#                 end_time = time.time()
-#                 print("Total Time: {:.2f} seconds".format(end_time - start_time))
-#                 print("Click Intervals:", click_intervals)
-#                 self.destroy()
+        # Initialize the click counter and the list of click intervals
+        click_count = 0
+        click_intervals = []
 
-#         # Generate the circles
-#         for i in range(self.number_of_circles):
-#             x = random.randint(self.circle_radius, self.canvas.winfo_width() - self.circle_radius)
-#             y = random.randint(self.circle_radius, self.canvas.winfo_height() - self.circle_radius)
-#             circle = tk.Canvas.create_oval(x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius, fill="green")
-#             canvas.tag_bind(circle, "<Button-1>", handle_click)
-#             self.circles.append(circle)
-#         # Start the timer
-#         start_time = time.time()
+        # Define a function to handle a click on a circle
+        def handle_click(event):
+            nonlocal click_count, click_intervals
+            click_count += 1
+            click_intervals.append(time.time() - start_time)
+            canvas.delete(event.widget)
+            if click_count == self.number_of_circles:
+                end_time = time.time()
+                print("Total Time: {:.2f} seconds".format(end_time - start_time))
+                print("Click Intervals:", click_intervals)
+                self.destroy()
 
+        # Generate the circles
+        for i in range(self.number_of_circles):
+            x = random.randint(
+                self.canvas.winfo_width() - self.circle_radius,
+                self.circle_radius)
+            y = random.randint(
+                self.canvas.winfo_height() - self.circle_radius,
+                self.circle_radius)
+
+            circle = self.canvas.create_oval(
+                x - self.circle_radius, y - self.circle_radius,
+                x + self.circle_radius, y + self.circle_radius,
+                fill="green")
+
+            self.canvas.tag_bind(circle, "<Button-1>", handle_click)
+            self.circles.append(circle)
+        # Start the timer
+        start_time = time.time()
 
 # After participants completed trials, populate results and close application
 # Store the data into the database from this current page similarly to when partipants answer the demographic questions to begin trials
