@@ -6,6 +6,7 @@ import time
 import pandas
 import random
 import csv
+import pandas 
 
 # Main Window
 class Application(tk.Tk):
@@ -75,41 +76,48 @@ class QuestionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)  # add padding to the frame
         
-        # FIX - ID does not generate a new ID and remains the same P0001 rather than P000X + 1
+        # define participant_count and call countIntervals to initialize
         global participant_count
-        generated_ids = [] 
+        participant_count = 0
+        generated_ids = []
 
         def countIntervals():
             try:
                 with open("Fitts_Data.csv", "r", newline="") as file:
                     reader = csv.reader(file)
                     rows = list(reader)
-                    global participant_count
+                    global participant_count, generated_ids
                     if len(rows) > 0:
                         last_id = rows[-1][0]
-                        if len(last_id) == 6 and last_id.startswith("P") and last_id[1:].isdigit():
+                        if last_id and len(last_id) == 6 and last_id.startswith("P") and last_id[1:].isdigit():
                             participant_count = int(last_id[1:])
                         else:
                             participant_count = 0
+                        generated_ids = list(set([row[0] for row in rows if row and len(row) >= 1]))
                     else:
                         participant_count = 0
+                        generated_ids = []
             except FileNotFoundError:
                 participant_count = 0
+                generated_ids = []
         
         def generateId():
             """Generates Participant ID"""
             countIntervals()
-            global participant_count
+            global participant_count, generated_ids
             participant_count += 1
             new_id = f"P{participant_count:04d}"
+            while new_id in generated_ids:  # check for duplicates
+                participant_count += 1
+                new_id = f"P{participant_count:04d}"
             generated_ids.append(new_id)
             with open("Fitts_Data.csv", "a", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow([new_id])
             return new_id 
         
-        new_id = generateId()
-
+        countIntervals()  # call the function to set the participant_count initially
+        
         def clickSubmit():
             """Transfers information into CSV"""
             if not validate():
@@ -119,9 +127,13 @@ class QuestionPage(Frame):
             gender = gender_entry.get()
             hand = hand_entry.get()
 
+            new_id = generateId() # generate a new ID each time the user submits
+
             # Store the data in CSV file (database)
             with open("Fitts_Data.csv", mode="a", newline="") as file:
                 writer = csv.writer(file)
+                if file.tell() == 0:  # Check if the file is empty
+                    writer.writerow(["ID", "Age", "Gender", "Hand"])  # Write headers
                 writer.writerow([new_id, age, gender, hand])
 
             if validate():
@@ -129,6 +141,7 @@ class QuestionPage(Frame):
             else:
                 messagebox.showerror("Error", "Please fill out all required fields before submitting.")
         
+        new_id = generateId()
         id_label = Label(self, text=f"ID: {new_id}")
         id_label.grid(row=1, column=1, sticky="nsew")
 
