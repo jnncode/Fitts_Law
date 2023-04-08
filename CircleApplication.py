@@ -79,7 +79,6 @@ class QuestionPage(Frame):
         # define participant_count and call countIntervals to initialize
         global participant_count
         participant_count = 0
-        generated_ids = []
 
         def countIntervals():
             try:
@@ -88,7 +87,7 @@ class QuestionPage(Frame):
                     rows = list(reader)
                     global participant_count, generated_ids
                     if len(rows) > 0:
-                        last_id = rows[-1][0]
+                        last_id = rows[-1]
                         if last_id and len(last_id) == 6 and last_id.startswith("P") and last_id[1:].isdigit():
                             participant_count = int(last_id[1:])
                         else:
@@ -105,15 +104,11 @@ class QuestionPage(Frame):
             """Generates Participant ID"""
             countIntervals()
             global participant_count, generated_ids
-            participant_count += 1
+            participant_count += 1 # Begin with P0001 
             new_id = f"P{participant_count:04d}"
-            while new_id in generated_ids:  # check for duplicates
+            while new_id in generated_ids: 
                 participant_count += 1
                 new_id = f"P{participant_count:04d}"
-            generated_ids.append(new_id)
-            with open("Fitts_Data.csv", "a", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerow([new_id])
             return new_id 
         
         countIntervals()  # call the function to set the participant_count initially
