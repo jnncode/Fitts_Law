@@ -7,6 +7,7 @@ import pandas
 import random
 import csv
 import pandas 
+import math
 
 # Main Window
 class Application(tk.Tk):
@@ -72,6 +73,7 @@ class ConsentPage(Frame):
         mb_disagree.grid(row=2, column=0, sticky="ns", pady=8)
 
 # Lists ID, Age, Gender, and Handedness then transfers the information into the CSV file
+# Clear all data before beginning trials to keep CSV accurate and consistent12
 class QuestionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)  # add padding to the frame
@@ -113,6 +115,19 @@ class QuestionPage(Frame):
         
         countIntervals()  # call the function to set the participant_count initially
         
+        def removeSpaces(data_file):
+            with open(data_file, "r") as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+            # remove spaces from each cell in each row
+            for row in rows: 
+                for i in range(len(row)):
+                    row[i] = row[i].strip()
+            # write cleaned rows back to CSV file 
+            with open(data_file, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerows(rows)
+
         def clickSubmit():
             """Transfers information into CSV"""
             if not validate():
@@ -122,15 +137,15 @@ class QuestionPage(Frame):
             gender = gender_entry.get()
             hand = hand_entry.get()
 
-            new_id = generateId() # generate a new ID each time the user submits
+            new_id = generateId() # generate a new ID each time the user submits for next user
 
             # Store the data in CSV file (database)
             with open("Fitts_Data.csv", mode="a", newline="") as file:
                 writer = csv.writer(file)
                 if file.tell() == 0:  # Check if the file is empty
-                    writer.writerow(["ID", "Age", "Gender", "Hand"])  # Write headers
+                    old_row = writer.writerow(["ID", "Age", "Gender", "Hand"])  # Write headers
                 writer.writerow([new_id, age, gender, hand])
-
+            removeSpaces("Fitts_Data.csv")
             if validate():
                 master.changePage(InstructionPage)
             else:
@@ -218,7 +233,7 @@ class InstructionPage(Frame):
         self.rowconfigure(0, minsize=600, weight=6)
 
         def begin():
-            master.changePage()  # CirclePage - Commented due to Error
+            master.changePage(CirclePage)  
 
         mb_begin = Button(self, text="Begin", relief=RAISED, command=begin)  # Add command Agree
         mb_begin.menu = Menu(mb_begin, tearoff=0)
@@ -227,83 +242,125 @@ class InstructionPage(Frame):
 
 # Colored circle for user to click (32 count) - ERROR FIX SOON
 class CirclePage(Frame):
-    def __init__(self, canvas, master=None):
-        Frame.__init__(self, master)
-        # Check canvas object is tkinter.Canvas object
-
-        self.canvas = Canvas(master)
-        if not isinstance(self.canvas, tk.Canvas):
-            raise TypeError("canvas must be a tkinter.Canvas object")
-        self.circle_radius = 20
-        self.number_of_circles = 32
-        self.circles = []
-
-        # Initialize the click counter and the list of click intervals
-        click_count = 0
-        click_intervals = []
-
-        # Define a function to handle a click on a circle
-        def handle_click(event):
-            nonlocal click_count, click_intervals
-            click_count += 1
-            click_intervals.append(time.time() - start_time)
-            canvas.delete(event.widget)
-            if click_count == self.number_of_circles:
-                end_time = time.time()
-                print("Total Time: {:.2f} seconds".format(end_time - start_time))
-                print("Click Intervals:", click_intervals)
-                self.destroy()
-
-        # Generate the circles
-        for i in range(self.number_of_circles):
-            x = random.randint(
-                self.canvas.winfo_width() - self.circle_radius,
-                self.circle_radius)
-            y = random.randint(
-                self.canvas.winfo_height() - self.circle_radius,
-                self.circle_radius)
-
-            circle = self.canvas.create_oval(
-                x - self.circle_radius, y - self.circle_radius,
-                x + self.circle_radius, y + self.circle_radius,
-                fill="green")
-
-            self.canvas.tag_bind(circle, "<Button-1>", handle_click)
-            self.circles.append(circle)
-        # Start the timer
-        start_time = time.time()
-
-# After participants completed trials, populate results and close application
-# Store the data into the database from this current page similarly to when partipants answer the demographic questions to begin trials
-class ResultPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
+        self.canvas = Canvas(master, width=1000, height=680)
+        self.circle_radius = 15
+        self.number_of_circles = 32
+        self.circles = []
+        self.click_count = 0
+        self.click_intervals = []
+        self.inaccurate_clicks = 0
 
-        # Testing - Results will populate for that specific participant and the data collected will be added onto the database (csv file) 
-        df = pandas.read_csv("Fitts_Data.csv")
-        print(df)               
+        # Start the timer
+        self.start_time = time.time()
 
-        def next():
-            master.changePage(ThankPage) 
+        # Generate the first cicrle
+        self.generateCircle()
 
-        
-        mb_next = Button(self, text="Next", relief=RAISED, command=next)  # Add command Agree
-        mb_next.menu = Menu(mb_next, tearoff=0)
-        mb_next.grid(row=1, column=0, sticky="ns")
+        # Progress label
+        self.progress = Label(text=f"{self.click_count}/{self.number_of_circles}")
+        self.progress.grid(sticky="n")
 
+        # Add canvas
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+
+    # Transition 
+    def complete(self):
+        self.master.changePage(ThankPage)
+
+    def generateCircle(self):
+        """Generates circle one at a time"""
+        self.canvas.delete("circle")
+        canvas_width = self.canvas.winfo_reqwidth()
+        canvas_height = self.canvas.winfo_reqheight()
+        x = random.randint(self.circle_radius, canvas_width - self.circle_radius)
+        y = random.randint(self.circle_radius, canvas_height - self.circle_radius)
+
+        circle = self.canvas.create_oval(
+            x - self.circle_radius, y - self.circle_radius,
+            x + self.circle_radius, y + self.circle_radius,
+            fill="green", tags="circle")
+        self.canvas.tag_bind(circle, "<Button-1>", self.handleClick)
+        self.circles.append((circle, x, y))
+
+    # Define a function to handle a click on a circle
+    def handleClick(self, event):
+        # Incremement click count by number of circles clicked thus far
+        self.click_count += 1
+        self.click_intervals.append(time.time() - self.start_time)
+        clicked_x = event.x
+        clicked_y = event.y
+        for circle, x, y in self.circles:
+            center_x = x
+            center_y = y
+            distance = math.sqrt((clicked_x - center_x)**2 + (clicked_y - center_y)**2)
+            if distance <= self.circle_radius:
+                self.canvas.delete(circle)
+                if distance >= (self.circle_radius / 2):
+                    self.inaccurate_clicks += 1
+                if self.click_count == self.number_of_circles:
+                    completion_time = time.time()
+                    self.destroy()
+                    with open("Fitts_Data.csv", "r", newline="") as file:
+                        reader = csv.reader(file)
+                        # Read header row
+                        header = next(reader)
+                        # Find index position of last header
+                        last_header_index = header.index("Hand") if "Hand" in header else 2
+                        # Add new headers for new columns 
+                        header = header[:last_header_index + 1] + ["Completion Time", "Click Intervals", "Total Clicks", "Inaccurate Clicks"] + header[last_header_index + 1:]
+                        # Create list to hold rows with added columns
+                        rows = []
+                        for row in reader:
+                            if len(row) < 4: # check if row has at least 4 elements 
+                                continue # skip this row if insufficient amount of elements 
+                            # Extract the previous columns 
+                            id, age, gender, hand = row[:4]
+                            # Extract list of click times and/or skip value cannot be converted to float and continue 
+                            click_times = []
+                            for x in row[4:]:
+                                try:
+                                    click_times.append(float(x))
+                                except ValueError:
+                                    pass
+                            # Calculate total clicks
+                            total_clicks = len(click_times)
+                            # Check rows list is empty
+                            if not rows: 
+                                rows.append(header)
+                            # Replace old and create new row with added columns
+                            self.old_row = rows.pop(0)
+                            new_row = [id, age, gender, hand, completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks]
+                            # Append new row to list of rows at end of list
+                            rows.append(new_row)
+                    with open("Fitts_Data.csv", "w", newline="") as file:
+                        writer = csv.writer(file)
+                        writer.writerow(header)
+                        writer.writerows(rows) # write all rows at once 
+                        self.complete() # transition to last page of application
+                        self.progress.grid_forget() # remove progress tracker label 
+                        break
+                else:
+                    self.generateCircle()
+                    self.progress.config(text=f"{self.click_count}/{self.number_of_circles}") # progress tracker X/32
 
 class ThankPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         label_thank_you = Label(self,
-                                text="Thank You!\n" + "All tasks have been completed and data has been collected.")
-        label_thank_you.config(font=18, relief=SOLID)
-        label_thank_you.grid(padx=50, pady=25)
+                                text="Thank You!\n" + "Task is completed and data was collected.")
+        label_thank_you.config(relief=SOLID)
+        label_thank_you.grid(row=0, column=0, sticky="nsew", columnspan=2)
 
         def Close():
             app.quit()
 
-        mb_close = Button(text="Quit", command=Close).grid()
+        mb_close = Button(text="Quit", command=Close)
+        mb_close.menu = Menu(mb_close, tearoff=0)
+        mb_close.grid(row=1, column=0, columnspan=2, pady=10)
 
 
 if __name__ == "__main__":
