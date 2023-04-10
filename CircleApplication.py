@@ -6,7 +6,6 @@ import time
 import pandas
 import random
 import csv
-import pandas 
 import math
 
 # Main Window
@@ -71,6 +70,7 @@ class ConsentPage(Frame):
         mb_disagree = Button(self, text="I Decline", relief=RAISED, width=7, height=1, command=clickDisagree)
         mb_disagree.menu = Menu(mb_disagree, tearoff=0)
         mb_disagree.grid(row=2, column=0, sticky="ns", pady=8)
+
 
 # Lists ID, Age, Gender, and Handedness then transfers the information into the CSV file
 # Clear all data before beginning trials to keep CSV accurate and consistent12
@@ -207,11 +207,6 @@ class QuestionPage(Frame):
         mb_submit.menu = Menu(mb_submit, tearoff=0)
         mb_submit.grid(row=8, column=1, sticky="nsew", pady=20)
 
-    # Pseudocode
-    # Display CirclePage 
-    # Begin trials and have Timer begin when user clicks on the Circle
-    # Once trials are done
-    # Navigate to ResultPage with a button or within a condition the trials are complete 
 
 class InstructionPage(Frame):
     def __init__(self, master=None):
@@ -284,11 +279,15 @@ class CirclePage(Frame):
         self.canvas.tag_bind(circle, "<Button-1>", self.handleClick)
         self.circles.append((circle, x, y))
 
+    def removeDuplicates(header_list):
+        """Removes any duplicats of the headers in CSV"""
+        return list(pandas.Series(header_list).drop_duplicates())
+
     # Define a function to handle a click on a circle
     def handleClick(self, event):
         # Incremement click count by number of circles clicked thus far
         self.click_count += 1
-        self.click_intervals.append(time.time() - self.start_time)
+        self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4)) # convert to milliseconds
         clicked_x = event.x
         clicked_y = event.y
         for circle, x, y in self.circles:
@@ -299,21 +298,24 @@ class CirclePage(Frame):
                 self.canvas.delete(circle)
                 if distance >= (self.circle_radius / 2):
                     self.inaccurate_clicks += 1
+                total_clicks = len(self.click_intervals)
                 if self.click_count == self.number_of_circles:
-                    completion_time = time.time()
+                    completion_time = round((time.time() - self.start_time), 4) # convert to seconds
                     self.destroy()
+                    # Check if CSV file exists and is not empty
                     with open("Fitts_Data.csv", "r", newline="") as file:
                         reader = csv.reader(file)
                         # Read header row
                         header = next(reader)
                         # Find index position of last header
                         last_header_index = header.index("Hand") if "Hand" in header else 2
-                        # Add new headers for new columns 
-                        header = header[:last_header_index + 1] + ["Completion Time", "Click Intervals", "Total Clicks", "Inaccurate Clicks"] + header[last_header_index + 1:]
+                        # Add new headers for new columns
+                        new_headers = ["Completion Time", "Click Intervals", "Total Clicks", "Inaccurate Clicks"]
+                        header = header[:last_header_index + 1] + new_headers + header[last_header_index + 1:]
                         # Create list to hold rows with added columns
                         rows = []
                         for row in reader:
-                            if len(row) < 4: # check if row has at least 4 elements 
+                            if len(row) <= 4: # check if row has at least 4 elements 
                                 continue # skip this row if insufficient amount of elements 
                             # Extract the previous columns 
                             id, age, gender, hand = row[:4]
@@ -324,43 +326,49 @@ class CirclePage(Frame):
                                     click_times.append(float(x))
                                 except ValueError:
                                     pass
-                            # Calculate total clicks
-                            total_clicks = len(click_times)
-                            # Check rows list is empty
-                            if not rows: 
-                                rows.append(header)
-                            # Replace old and create new row with added columns
-                            self.old_row = rows.pop(0)
-                            new_row = [id, age, gender, hand, completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks]
-                            # Append new row to list of rows at end of list
-                            rows.append(new_row)
+                            # Check if new headers already exist in header row
+                            if set(new_headers).issubset(set(header)): 
+                                # If new headers already exist, remove from new row
+                                new_row = [id, age, gender, hand, completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks]
+                            else:
+                                # If new headers do not exist, create new row with added columns
+                                new_row = [id, age, gender, hand] + None * len(new_headers) + [completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks] + click_times
+                                header += new_headers
+                                # Append new row to list of rows at end of list
+                                rows.append(new_row)
                     with open("Fitts_Data.csv", "w", newline="") as file:
                         writer = csv.writer(file)
                         writer.writerow(header)
                         writer.writerows(rows) # write all rows at once 
+                        self.removeDuplicates() # if any duplicates are displayed
                         self.complete() # transition to last page of application
                         self.progress.grid_forget() # remove progress tracker label 
-                        break
                 else:
                     self.generateCircle()
                     self.progress.config(text=f"{self.click_count}/{self.number_of_circles}") # progress tracker X/32
 
+
 class ThankPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        label_thank_you = Label(self,
-                                text="Thank You!\n" + "Task is completed and data was collected.")
-        label_thank_you.config(relief=SOLID)
-        label_thank_you.grid(row=0, column=0, sticky="nsew", columnspan=2)
+        label_complete = Label(self,
+        text=
+        """
+        Task Completed.
 
-        def Close():
+        Thank you for participating in the study!""")
+
+        label_complete.grid(row=0, column=0, sticky="nsew")
+        
+        self.columnconfigure(0, minsize=1000, weight=6)
+        self.rowconfigure(0, minsize=600, weight=6)
+
+        def close():
             app.quit()
 
-        mb_close = Button(text="Quit", command=Close)
+        mb_close = Button(self, text="Quit", relief=RAISED, width=5, height=1, command=close)
         mb_close.menu = Menu(mb_close, tearoff=0)
-        mb_close.grid(row=1, column=0, columnspan=2, pady=10)
+        mb_close.grid(row=1, column=0, sticky="ns", pady=4)
 
 
 if __name__ == "__main__":
