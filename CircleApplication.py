@@ -7,10 +7,6 @@ import random
 import csv
 import math
 
-
-# import pandas
-# import os
-
 # Main Window
 class Application(tk.Tk):
     def __init__(self):
@@ -78,9 +74,8 @@ class ConsentPage(Frame):
 # Clear all data before beginning trials to keep CSV accurate and consistent
 class QuestionPage(Frame):
     def __init__(self, master=None):
-        Frame.__init__(self, master)  # add padding to the frame
+        Frame.__init__(self, master)
 
-        # define participant_count and call countIntervals to initialize
         global participant_count
         participant_count = 0
 
@@ -115,7 +110,7 @@ class QuestionPage(Frame):
                 new_id = f"P{participant_count:04d}"
             return new_id
 
-        countIntervals()  # call the function to set the participant_count initially
+        countIntervals()  # Call function to set participant_count in initial state
 
         def clickSubmit():
             """Transfers information into CSV"""
@@ -126,17 +121,15 @@ class QuestionPage(Frame):
             gender = gender_entry.get().strip(" ")
             hand = hand_entry.get().strip(" ")
 
-            new_id = generateId()  # generate a new ID each time the user submits for next user
+            new_id = generateId()  # Generate new ID each time the user submits for next user
 
             # Store the data in CSV file (database)
             with open("Fitts_Data.csv", mode="a", newline="") as file:
                 writer = csv.writer(file)
                 if file.tell() == 0:  # Check if the file is empty
                     writer.writerow(["ID", "Age", "Gender", "Hand", "Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"])  # Write headers
-                data_str = "{},{},{},{},".format(new_id, age, gender, hand)
-                file.write(data_str)
-                # writer.writerow([new_id, age, gender, hand])
-            # removeSpaces("Fitts_Data.csv")
+                data_string = "{},{},{},{},".format(new_id, age, gender, hand)
+                file.write(data_string)
             if validate():
                 master.changePage(InstructionPage)
             else:
@@ -177,20 +170,16 @@ class QuestionPage(Frame):
             except ValueError:
                 messagebox.showerror("Error", "Please enter valid age between 18 and 100 (must be 18 or older).")
                 return False
-
             # Check if gender is filled and valid
             gender = gender_entry.get().strip().casefold()
             if gender not in ["male", "female", "other"] or not gender_entry.get():
                 messagebox.showerror("Error", "Please enter valid gender (male, female, or other).")
                 return False
-
             # Check if handedness is filled and valid
             handedness = hand_entry.get().strip().casefold()
             if handedness not in ["left", "right"] or not hand_entry.get():
                 messagebox.showerror("Error", "Please enter valid handedness (left or right).")
                 return False
-
-            # If all fields have been filled
             return True
 
         # Disable the submit button by default
@@ -220,7 +209,7 @@ class InstructionPage(Frame):
         def begin():
             master.changePage(CirclePage)
 
-        mb_begin = Button(self, text="Begin", relief=RAISED, command=begin)  # Add command Agree
+        mb_begin = Button(self, text="Begin", relief=RAISED, command=begin)
         mb_begin.menu = Menu(mb_begin, tearoff=0)
         mb_begin.grid(row=1, column=0, sticky="ns")
 
@@ -243,14 +232,12 @@ class CirclePage(Frame):
         # Generate the first cicrle
         self.generateCircle()
 
-        # Progress label
         self.progress = Label(text=f"{self.click_count}/{self.number_of_circles}")
         self.progress.grid(sticky="n")
 
         # Add canvas
         self.canvas.grid(row=0, column=0, sticky="nsew")
 
-    # Transition
     def complete(self):
         self.master.changePage(ThankPage)
 
@@ -269,11 +256,10 @@ class CirclePage(Frame):
         self.canvas.tag_bind(circle, "<Button-1>", self.handleClick)
         self.circles.append((circle, x, y))
 
-    # Define a function to handle a click on a circle
     def handleClick(self, event):
         """Handles the clicks of the circles"""
         self.click_count += 1
-        self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4))  # convert to milliseconds
+        self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4))  # Convert to milliseconds
         clicked_x = event.x
         clicked_y = event.y
         for circle, x, y in self.circles:
@@ -285,21 +271,21 @@ class CirclePage(Frame):
                 if distance >= (self.circle_radius / 2):
                     self.inaccurate_clicks += 1
                 if self.click_count == self.number_of_circles:
-                    self.completion_time = round((time.time() - self.start_time), 4)  # convert to seconds
+                    self.completion_time = round((time.time() - self.start_time), 4)  # Convert to seconds
                     self.destroy()
                     self.handleData(1)
-                    self.complete() # transition to last page of application
-                    self.progress.grid_forget() # remove progress tracker label
+                    self.complete() # Transition to last page of application
+                    self.progress.grid_forget() # Remove progress tracker label
                 else:
                     self.generateCircle()
-                    self.progress.config(text=f"{self.click_count}/{self.number_of_circles}")  # progress tracker X/32
+                    self.progress.config(text=f"{self.click_count}/{self.number_of_circles}")  # Progress tracker X/32
 
-    def handleData(self, row_index):
+    def handleData(self):
         """Handles the existing data in addition to new data in CSV"""
-        # Write new data to CSV file
         with open("Fitts_Data.csv", mode="a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow([self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
+
 
 class ThankPage(Frame):
     def __init__(self, master=None):
