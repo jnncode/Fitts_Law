@@ -280,9 +280,8 @@ class CirclePage(Frame):
         self.canvas.tag_bind(circle, "<Button-1>", self.handleClick)
         self.circles.append((circle, x, y))
 
-    # Define a function to handle a click on a circle
     def handleClick(self, event):
-        # Incremement click count by number of circles clicked thus far
+        """Handles the clicks of the circles"""
         self.click_count += 1
         self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4)) # convert to milliseconds
         clicked_x = event.x
@@ -298,39 +297,40 @@ class CirclePage(Frame):
                 if self.click_count == self.number_of_circles:
                     self.completion_time = round((time.time() - self.start_time), 4) # convert to seconds
                     self.destroy()
-                    self.addData(1)
+                    self.handleData(1)
                     self.complete() # transition to last page of application
                     self.progress.grid_forget() # remove progress tracker label
                 else:
                     self.generateCircle()
                     self.progress.config(text=f"{self.click_count}/{self.number_of_circles}") # progress tracker X/32
 
-    def addData(self, row_index):
+    def handleData(self, row_index):
+        """Handles the existing data in addition to new data in CSV"""
+        # Write new data to CSV file
         with open("Fitts_Data.csv", mode="a", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow([self.completion_time, self.click_count, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
+            writer.writerow([self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
+
+        # Read existing data from CSV file
         with open("Fitts_Data.csv", mode="r", newline="") as file:
             reader = csv.reader(file)
             headers = next(reader)
             data = list(reader)
-            if row_index == 4:
-            # Update headers to include new columns (if not added previously)
-                new_headers = ["Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"]
-                if set(new_headers) - set(headers):
-                    headers += new_headers
-                data[row_index][4] = self.completion_time
-                data[row_index][5] = sum(self.click_intervals) / len(self.number_of_circles)
-                data[row_index][6] = self.inaccurate_clicks
-                if row_index > 6:
-                    # Only should include 7 headers
-                    TypeError("Maximum of headers reached.")
-                    with open("Fitts_Data.csv", mode="w", newline="") as file:
-                        writer.writerows(data)
-                else:
-                    # Update data to file
-                    with open("Fitts_Data.csv", mode="w", newline="") as file:
-                        writer.writerow(new_headers)
-                        writer.writerows(data)
+
+        # Update headers to include new columns (if not added previously)
+        new_headers = ["Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"]
+        if set(new_headers) - set(headers):
+            headers += new_headers
+
+        if row_index > 7:
+            raise TypeError("Maximum of headers reached.")
+
+        # Write headers to file (if necessary) and update data
+        with open("Fitts_Data.csv", mode="w", newline="") as file:
+            writer = csv.writer(file)
+            if set(new_headers) - set(headers):
+                writer.writerow(headers + new_headers)
+            writer.writerows([headers] + data[:row_index] + [[self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks]] + data[row_index+1:])
 
 class ThankPage(Frame):
     def __init__(self, master=None):
