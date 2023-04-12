@@ -316,11 +316,11 @@ class CirclePage(Frame):
             writer = csv.writer(file)
             writer.writerow([self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
 
-        # Read existing data from CSV file
-        with open("Fitts_Data.csv", mode="r", newline="") as file:
-            reader = csv.reader(file)
-            headers = next(reader)
-            data = list(reader)
+        # # Read existing data from CSV file
+        # with open("Fitts_Data.csv", mode="r", newline="") as file:
+        #     reader = csv.reader(file)
+        #     headers = next(reader)
+        #     data = list(reader)
 
         # # Update headers to include new columns (if not added previously)
         # new_headers = ["Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"]
