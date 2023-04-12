@@ -236,7 +236,7 @@ class InstructionPage(Frame):
         mb_begin.grid(row=1, column=0, sticky="ns")
 
 
-# Colored circle for user to click (32 count) - ERROR FIX SOON
+# Colored circle for user to click (32 count) 
 class CirclePage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
