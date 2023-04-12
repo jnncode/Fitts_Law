@@ -45,16 +45,15 @@ class ConsentPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
-        label_consent = Label(self,
-                              text=
-                              """
-                              Consent Form
+        label_consent = Label(self,text=
+        """
+        Consent Form
 
-                              The following research application is being conducted by J Nguyen in the CSET Department with the guidance of Dr. Salivia Guario.
-                              The application is to evaluate and analyze the results following the Law of Fitts. The law is a predictive model of human movement
-                              primarily used in human-computer interaction and ergonomics. Participants are expected to click the randomly generated circles
-                              accurately and precisely within 32 trials. The data recorded will be stored into a database and be included in a report based on
-                              the demographic responses. The completion time will be between 5 to 10 minutes.""")
+        The following research application is being conducted by J Nguyen in the CSET Department with the guidance of Dr. Salivia Guario.
+        The application is to evaluate and analyze the results following the Law of Fitts. The law is a predictive model of human movement
+        primarily used in human-computer interaction and ergonomics. Participants are expected to click the randomly generated circles
+        accurately and precisely within 32 trials. The data recorded will be stored into a database and be included in a report based on
+        the demographic responses. The completion time will be between 5 to 10 minutes.""")
 
         label_consent.grid(row=0, column=0, sticky="nsew")
         self.columnconfigure(0, minsize=1000, weight=6)
@@ -117,19 +116,6 @@ class QuestionPage(Frame):
             return new_id
 
         countIntervals()  # call the function to set the participant_count initially
-
-        def removeSpaces(data_file):
-            with open(data_file, "r") as file:
-                reader = csv.reader(file)
-                rows = list(reader)
-            # remove spaces from each cell in each row
-            for row in rows:
-                for i in range(len(row)):
-                    row[i] = row[i].strip()
-            # write cleaned rows back to CSV file
-            with open(data_file, "w", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerows(rows)
 
         def clickSubmit():
             """Transfers information into CSV"""
@@ -217,15 +203,14 @@ class InstructionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
-        label_instruction = Label(self,
-                                  text=
-                                  """
-                                  Instructions
+        label_instruction = Label(self,text=
+        """
+        Instructions
 
-                                  Green circles will randomly generate within the screen. 
-                                  Each circle must be clicked in order to proceed, and will be done 32 times.
-                                  Any misclicks outside of the circles will effect the performance results.
-                                  Progress will be visibly displayed on the top of the screen.""")
+        Green circles will randomly generate within the screen. 
+        Each circle must be clicked in order to proceed, and will be done 32 times.
+        Any misclicks outside of the circles will effect the performance results.
+        Progress will be visibly displayed on the top of the screen.""")
 
         label_instruction.grid(row=0, column=0, sticky="nsew")
 
@@ -316,37 +301,15 @@ class CirclePage(Frame):
             writer = csv.writer(file)
             writer.writerow([self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
 
-        # # Read existing data from CSV file
-        # with open("Fitts_Data.csv", mode="r", newline="") as file:
-        #     reader = csv.reader(file)
-        #     headers = next(reader)
-        #     data = list(reader)
-
-        # # Update headers to include new columns (if not added previously)
-        # new_headers = ["Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"]
-        # if set(new_headers) - set(headers):
-        #     headers += new_headers
-        #
-        # if row_index > 7:
-        #     raise TypeError("Maximum of headers reached.")
-
-        # # Write headers to file (if necessary) and update data
-        # with open("Fitts_Data.csv", mode="w", newline="") as file:
-        #     writer = csv.writer(file)
-        #     if set(new_headers) - set(headers):
-        #         writer.writerow(headers + new_headers)
-        #     writer.writerows([headers] + data[:row_index] + [[self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks]] + data[row_index+1:])
-
 class ThankPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
-        label_complete = Label(self,
-                               text=
-                               """
-                               Task Completed.
+        label_complete = Label(self,text=
+        """
+        Task Completed.
 
-                               Thank you for participating in the study!""", justify=CENTER)
+        Thank you for participating in the study!""", justify=CENTER)
 
         label_complete.grid(row=0, column=0, sticky="nsew")
         self.columnconfigure(0, minsize=1000, weight=6)
