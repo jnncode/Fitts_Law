@@ -1,3 +1,4 @@
+import os
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
@@ -279,12 +280,14 @@ class CirclePage(Frame):
         self.canvas.tag_bind(circle, "<Button-1>", self.handleClick)
         self.circles.append((circle, x, y))
 
-    def removeDuplicates(header_list):
+    def removeDuplicates(self, header_list):
         """Removes any duplicats of the headers in CSV"""
         return list(pandas.Series(header_list).drop_duplicates())
 
     # Define a function to handle a click on a circle
     def handleClick(self, event):
+        # Define new headers for CSV file 
+        new_headers = ["Completion Time", "Click Intervals", "Total Clicks", "Inaccurate Clicks"]
         # Incremement click count by number of circles clicked thus far
         self.click_count += 1
         self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4)) # convert to milliseconds
@@ -303,46 +306,37 @@ class CirclePage(Frame):
                     completion_time = round((time.time() - self.start_time), 4) # convert to seconds
                     self.destroy()
                     # Check if CSV file exists and is not empty
-                    with open("Fitts_Data.csv", "r", newline="") as file:
-                        reader = csv.reader(file)
-                        # Read header row
-                        header = next(reader)
-                        # Find index position of last header
-                        last_header_index = header.index("Hand") if "Hand" in header else 2
-                        # Add new headers for new columns
-                        new_headers = ["Completion Time", "Click Intervals", "Total Clicks", "Inaccurate Clicks"]
-                        header = header[:last_header_index + 1] + new_headers + header[last_header_index + 1:]
-                        # Create list to hold rows with added columns
-                        rows = []
-                        for row in reader:
-                            if len(row) <= 4: # check if row has at least 4 elements 
-                                continue # skip this row if insufficient amount of elements 
-                            # Extract the previous columns 
-                            id, age, gender, hand = row[:4]
-                            # Extract list of click times and/or skip value cannot be converted to float and continue 
-                            click_times = []
-                            for x in row[4:]:
-                                try:
-                                    click_times.append(float(x))
-                                except ValueError:
-                                    pass
-                            # Check if new headers already exist in header row
-                            if set(new_headers).issubset(set(header)): 
-                                # If new headers already exist, remove from new row
-                                new_row = [id, age, gender, hand, completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks]
-                            else:
-                                # If new headers do not exist, create new row with added columns
-                                new_row = [id, age, gender, hand] + None * len(new_headers) + [completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks] + click_times
-                                header += new_headers
+                    if os.path.isfile("Fitts_Data.csv") and os.stat("Fitts_Data.csv").st_size != 0:
+                        with open("Fitts_Data.csv", "r", newline="") as file:
+                            rows = []
+                            header_row_written = False
+                            for row in csv.reader(file):
+                                if not header_row_written:
+                                    if set(new_headers).issubset(set(row)):
+                                        header_row_written = True
+                                if len(row) <= 4: # check if row has at least 4 elements
+                                    continue # skip this row if insufficient amount of elements
+                                # Extract the previous columns
+                                id, age, gender, hand = row[:4]
+                                # Extract list of click times and/or skip value cannot be converted to float and continue
+                                click_times = []
+                                for x in row[4:]:
+                                    try:
+                                        click_times.append(float(x))
+                                    except ValueError:
+                                        pass
+                                # Create new row with added columns
+                                new_row = [id, age, gender, hand] + [None] * len(new_headers) + [completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks] + click_times
                                 # Append new row to list of rows at end of list
-                                rows.append(new_row)
-                    with open("Fitts_Data.csv", "w", newline="") as file:
-                        writer = csv.writer(file)
-                        writer.writerow(header)
-                        writer.writerows(rows) # write all rows at once 
-                        self.removeDuplicates() # if any duplicates are displayed
-                        self.complete() # transition to last page of application
-                        self.progress.grid_forget() # remove progress tracker label 
+                                rows.append(row[:4] + new_row[4:])
+                            with open("Fitts_Data.csv", "a", newline="") as file:
+                                writer = csv.writer(file)
+                                if not header_row_written:
+                                    headers = row[:4] + new_headers + row[4:]
+                                    writer.writerow(headers)
+                                writer.writerows(rows)
+                                self.complete() # transition to last page of application
+                                self.progress.grid_forget() # remove progress tracker label
                 else:
                     self.generateCircle()
                     self.progress.config(text=f"{self.click_count}/{self.number_of_circles}") # progress tracker X/32
@@ -351,6 +345,11 @@ class CirclePage(Frame):
 class ThankPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
+
         label_complete = Label(self,
         text=
         """
@@ -358,17 +357,15 @@ class ThankPage(Frame):
 
         Thank you for participating in the study!""")
 
-        label_complete.grid(row=0, column=0, sticky="nsew")
+        label_complete.grid(row=1, column=0, sticky="nsew")
         
-        self.columnconfigure(0, minsize=1000, weight=6)
-        self.rowconfigure(0, minsize=600, weight=6)
 
         def close():
             app.quit()
 
         mb_close = Button(self, text="Quit", relief=RAISED, width=5, height=1, command=close)
         mb_close.menu = Menu(mb_close, tearoff=0)
-        mb_close.grid(row=1, column=0, sticky="ns", pady=4)
+        mb_close.grid(row=2, column=0, sticky="ns", pady=2)
 
 
 if __name__ == "__main__":

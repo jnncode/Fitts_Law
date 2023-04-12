@@ -1,2 +1,6 @@
-ID,Age,Gender,Hand,Completion Time,Click Intervals,Total Clicks,Inaccurate Clicks
+ID,Age,Gender,Hand
 P0001,22,other,right
+P0002,22,other,right
+P0003,22,other,right
+P0004,22,other,right
+P0004,22,other,right,Completion Time,Click Intervals,Total Clicks,Inaccurate Clicks
