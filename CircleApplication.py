@@ -74,7 +74,7 @@ class ConsentPage(Frame):
 
 
 # Lists ID, Age, Gender, and Handedness then transfers the information into the CSV file
-# Clear all data before beginning trials to keep CSV accurate and consistent12
+# Clear all data before beginning trials to keep CSV accurate and consistent
 class QuestionPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)  # add padding to the frame
@@ -144,7 +144,7 @@ class QuestionPage(Frame):
             with open("Fitts_Data.csv", mode="a", newline="") as file:
                 writer = csv.writer(file)
                 if file.tell() == 0:  # Check if the file is empty
-                    old_row = writer.writerow(["ID", "Age", "Gender", "Hand"])  # Write headers
+                    writer.writerow(["ID", "Age", "Gender", "Hand"])  # Write headers
                 writer.writerow([new_id, age, gender, hand])
             removeSpaces("Fitts_Data.csv")
             if validate():
@@ -312,61 +312,49 @@ class CirclePage(Frame):
                             header_row_written = False
                             for row in csv.reader(file):
                                 if not header_row_written:
-                                    if set(new_headers).issubset(set(row)):
+                                    if set(["ID", "Age", "Gender", "Hand"]).issubset(set(row)):
                                         header_row_written = True
-                                if len(row) <= 4: # check if row has at least 4 elements
+                                if len(row) < 4: # check if row has at least 4 elements
                                     continue # skip this row if insufficient amount of elements
                                 # Extract the previous columns
                                 id, age, gender, hand = row[:4]
-                                # Extract list of click times and/or skip value cannot be converted to float and continue
-                                click_times = []
-                                for x in row[4:]:
-                                    try:
-                                        click_times.append(float(x))
-                                    except ValueError:
-                                        pass
                                 # Create new row with added columns
-                                new_row = [id, age, gender, hand] + [None] * len(new_headers) + [completion_time, self.click_intervals, total_clicks, self.inaccurate_clicks] + click_times
+                                new_row = [id, age, gender, hand] + [None] * len(new_headers)
                                 # Append new row to list of rows at end of list
-                                rows.append(row[:4] + new_row[4:])
-                            with open("Fitts_Data.csv", "a", newline="") as file:
-                                writer = csv.writer(file)
-                                if not header_row_written:
-                                    headers = row[:4] + new_headers + row[4:]
-                                    writer.writerow(headers)
-                                writer.writerows(rows)
-                                self.complete() # transition to last page of application
-                                self.progress.grid_forget() # remove progress tracker label
+                                rows.append(new_row)
+                        with open("Fitts_Data.csv", "a", newline="") as file:
+                            writer = csv.writer(file)
+                            if not header_row_written:
+                                headers = ["ID", "Age", "Gender", "Hand"] + new_headers
+                                writer.writerow(headers)
+                            writer.writerows(rows)
+                            self.complete() # transition to last page of application
+                            self.progress.grid_forget() # remove progress tracker label
                 else:
                     self.generateCircle()
                     self.progress.config(text=f"{self.click_count}/{self.number_of_circles}") # progress tracker X/32
 
-
 class ThankPage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=1)
-
+        
         label_complete = Label(self,
         text=
         """
         Task Completed.
 
-        Thank you for participating in the study!""")
+        Thank you for participating in the study!""", justify=CENTER)
 
-        label_complete.grid(row=1, column=0, sticky="nsew")
-        
+        label_complete.grid(row=0, column=0, sticky="nsew")
+        self.columnconfigure(0, minsize=1000, weight=6)
+        self.rowconfigure(0, minsize=600, weight=6)
 
         def close():
             app.quit()
 
-        mb_close = Button(self, text="Quit", relief=RAISED, width=5, height=1, command=close)
+        mb_close = Button(self, text="Quit", relief=RAISED, width=7, height=1, command=close)
         mb_close.menu = Menu(mb_close, tearoff=0)
-        mb_close.grid(row=2, column=0, sticky="ns", pady=2)
-
+        mb_close.grid(row=1, column=0, sticky="ns", pady=8)
 
 if __name__ == "__main__":
     app = Application()
