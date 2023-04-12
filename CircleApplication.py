@@ -1,13 +1,13 @@
-import os
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 import tkinter as tk
 import time
-import pandas
 import random
 import csv
 import math
+# import pandas
+# import os
 
 # Main Window
 class Application(tk.Tk):
@@ -280,14 +280,8 @@ class CirclePage(Frame):
         self.canvas.tag_bind(circle, "<Button-1>", self.handleClick)
         self.circles.append((circle, x, y))
 
-    def removeDuplicates(self, header_list):
-        """Removes any duplicats of the headers in CSV"""
-        return list(pandas.Series(header_list).drop_duplicates())
-
     # Define a function to handle a click on a circle
     def handleClick(self, event):
-        # Define new headers for CSV file 
-        new_headers = ["Completion Time", "Click Intervals", "Total Clicks", "Inaccurate Clicks"]
         # Incremement click count by number of circles clicked thus far
         self.click_count += 1
         self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4)) # convert to milliseconds
@@ -301,38 +295,42 @@ class CirclePage(Frame):
                 self.canvas.delete(circle)
                 if distance >= (self.circle_radius / 2):
                     self.inaccurate_clicks += 1
-                total_clicks = len(self.click_intervals)
                 if self.click_count == self.number_of_circles:
-                    completion_time = round((time.time() - self.start_time), 4) # convert to seconds
+                    self.completion_time = round((time.time() - self.start_time), 4) # convert to seconds
                     self.destroy()
-                    # Check if CSV file exists and is not empty
-                    if os.path.isfile("Fitts_Data.csv") and os.stat("Fitts_Data.csv").st_size != 0:
-                        with open("Fitts_Data.csv", "r", newline="") as file:
-                            rows = []
-                            header_row_written = False
-                            for row in csv.reader(file):
-                                if not header_row_written:
-                                    if set(["ID", "Age", "Gender", "Hand"]).issubset(set(row)):
-                                        header_row_written = True
-                                if len(row) < 4: # check if row has at least 4 elements
-                                    continue # skip this row if insufficient amount of elements
-                                # Extract the previous columns
-                                id, age, gender, hand = row[:4]
-                                # Create new row with added columns
-                                new_row = [id, age, gender, hand] + [None] * len(new_headers)
-                                # Append new row to list of rows at end of list
-                                rows.append(new_row)
-                        with open("Fitts_Data.csv", "a", newline="") as file:
-                            writer = csv.writer(file)
-                            if not header_row_written:
-                                headers = ["ID", "Age", "Gender", "Hand"] + new_headers
-                                writer.writerow(headers)
-                            writer.writerows(rows)
-                            self.complete() # transition to last page of application
-                            self.progress.grid_forget() # remove progress tracker label
+                    self.addData(1)
+                    self.complete() # transition to last page of application
+                    self.progress.grid_forget() # remove progress tracker label
                 else:
                     self.generateCircle()
                     self.progress.config(text=f"{self.click_count}/{self.number_of_circles}") # progress tracker X/32
+
+    def addData(self, row_index):
+        with open("Fitts_Data.csv", mode="a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([self.completion_time, self.click_count, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
+        with open("Fitts_Data.csv", mode="r", newline="") as file:
+            reader = csv.reader(file)
+            headers = next(reader)
+            data = list(reader)
+            if row_index == 4:
+            # Update headers to include new columns (if not added previously)
+                new_headers = ["Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"]
+                if set(new_headers) - set(headers):
+                    headers += new_headers
+                data[row_index][4] = self.completion_time
+                data[row_index][5] = sum(self.click_intervals) / len(self.number_of_circles)
+                data[row_index][6] = self.inaccurate_clicks
+                if row_index > 6:
+                    # Only should include 7 headers
+                    TypeError("Maximum of headers reached.")
+                    with open("Fitts_Data.csv", mode="w", newline="") as file:
+                        writer.writerows(data)
+                else:
+                    # Update data to file
+                    with open("Fitts_Data.csv", mode="w", newline="") as file:
+                        writer.writerow(new_headers)
+                        writer.writerows(data)
 
 class ThankPage(Frame):
     def __init__(self, master=None):
