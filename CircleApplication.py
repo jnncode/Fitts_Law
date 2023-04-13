@@ -218,7 +218,7 @@ class InstructionPage(Frame):
 class CirclePage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.canvas = Canvas(master, width=1000, height=680)
+        self.canvas = Canvas(master, width=1000, height=650)
         self.circle_radius = 15
         self.number_of_circles = 32
         self.circles = []
@@ -238,8 +238,7 @@ class CirclePage(Frame):
         # Add canvas
         self.canvas.grid(row=0, column=0, sticky="nsew")
 
-    def complete(self):
-        self.master.changePage(ThankPage)
+        self.complete_label = Label(text="Task Completed.\nThank you for participating.")
 
     def generateCircle(self):
         """Generates circle one at a time"""
@@ -273,8 +272,8 @@ class CirclePage(Frame):
                 if self.click_count == self.number_of_circles:
                     self.completion_time = round((time.time() - self.start_time), 4)  # Convert to seconds
                     self.destroy()
-                    self.handleData(1)
-                    self.complete() # Transition to last page of application
+                    self.handleData()
+                    self.complete()
                     self.progress.grid_forget() # Remove progress tracker label
                 else:
                     self.generateCircle()
@@ -286,27 +285,9 @@ class CirclePage(Frame):
             writer = csv.writer(file)
             writer.writerow([self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
 
-
-class ThankPage(Frame):
-    def __init__(self, master=None):
-        Frame.__init__(self, master)
-
-        label_complete = Label(self,text=
-        """
-        Task Completed.
-
-        Thank you for participating in the study!""", justify=CENTER)
-
-        label_complete.grid(row=0, column=0, sticky="nsew")
-        self.columnconfigure(0, minsize=1000, weight=6)
-        self.rowconfigure(0, minsize=600, weight=6)
-
-        def close():
-            app.quit()
-
-        mb_close = Button(self, text="Quit", relief=RAISED, width=7, height=1, command=close)
-        mb_close.menu = Menu(mb_close, tearoff=0)
-        mb_close.grid(row=1, column=0, sticky="ns", pady=8)
+    def complete(self):
+        """Hides the ThankYou text and quits application"""
+        self.complete_label.grid(row=0,column=0, sticky="nsew")
 
 
 if __name__ == "__main__":
