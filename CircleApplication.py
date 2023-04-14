@@ -127,7 +127,7 @@ class QuestionPage(Frame):
             with open("Fitts_Data.csv", mode="a", newline="") as file:
                 writer = csv.writer(file)
                 if file.tell() == 0:  # Check if the file is empty
-                    writer.writerow(["ID", "Age", "Gender", "Hand", "Completion Time(s)", "Click Intervals(ms)", "Inaccurate Clicks"])  # Write headers
+                    writer.writerow(["ID", "Age", "Gender", "Hand", "Completion Time(s)", "Inaccurate Clicks"])  # Write headers
                 data_string = "{},{},{},{},".format(new_id, age, gender, hand)
                 file.write(data_string)
             if validate():
@@ -238,7 +238,7 @@ class CirclePage(Frame):
         # Add canvas
         self.canvas.grid(row=0, column=0, sticky="nsew")
 
-        self.complete_label = Label(text="Task Completed.\nThank you for participating.")
+        self.complete_label = Label(text="Task Completed.\nThank you for participating in the Fitts' study.")
 
     def generateCircle(self):
         """Generates circle one at a time"""
@@ -258,7 +258,6 @@ class CirclePage(Frame):
     def handleClick(self, event):
         """Handles the clicks of the circles"""
         self.click_count += 1
-        self.click_intervals.append(round(((time.time() - self.start_time) * 1000), 4))  # Convert to milliseconds
         clicked_x = event.x
         clicked_y = event.y
         for circle, x, y in self.circles:
@@ -277,13 +276,13 @@ class CirclePage(Frame):
                     self.progress.grid_forget() # Remove progress tracker label
                 else:
                     self.generateCircle()
-                    self.progress.config(text=f"{self.click_count}/{self.number_of_circles}")  # Progress tracker X/32
+                    self.progress.config(text=f"{self.click_count}/{self.number_of_circles}")  
 
     def handleData(self):
         """Handles the existing data in addition to new data in CSV"""
         with open("Fitts_Data.csv", mode="a", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow([self.completion_time, (sum(self.click_intervals) / 32), self.inaccurate_clicks])
+            writer.writerow([self.completion_time, self.inaccurate_clicks])
 
     def complete(self):
         """Hides the ThankYou text and quits application"""
