@@ -87,7 +87,7 @@ class QuestionPage(Frame):
                     global participant_count, generated_ids
                     if len(rows) > 0:
                         last_id = rows[-1]
-                        if last_id and len(last_id) == 6 and last_id.startswith("P") and last_id[1:].isdigit():
+                        if last_id and len(last_id[0]) == 6 and last_id[0].startswith("P") and last_id[0][1:].isdigit():
                             participant_count = int(last_id[1:])
                         else:
                             participant_count = 0
