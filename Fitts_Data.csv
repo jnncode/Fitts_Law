@@ -1,2 +1,11 @@
 ID,Age,Gender,Hand,Completion Time(s),Inaccurate Clicks
-P0001,22,other,right,
+P0001,22,other,right,28.7315,13
+P0002,20,Male,Right,47.724,10
+P0003,19,female,right,37.0011,8
+P0004,18,female,right,33.8583,11
+P0005,23,Female,Right,38.543,10
+P0006,19,Female,Right,42.9069,8
+P0007,18,female,right,48.4653,4
+P0008,19,Male,Right,34.6996,11
+P0009,18,female,right,56.4516,12
+P0010,18,female,right,34.9237,14
