@@ -47,8 +47,8 @@ class ConsentPage(Frame):
 
         The following research application is being conducted by J Nguyen in the CSET Department with the guidance of Dr. Salivia Guario.
         The application is to evaluate and analyze the results following the Law of Fitts. The law is a predictive model of human movement
-        primarily used in human-computer interaction and ergonomics. Participants are expected to click the randomly generated circles
-        accurately and precisely within 32 trials. The data recorded will be stored into a database and be included in a report based on
+        primarily used in human-computer interaction and ergonomics. Participants are expected to click the center of the randomly generated 
+        circles accurately and precisely within 32 trials. The data recorded will be stored into a database and be included in a report based on
         the demographic responses. The completion time will be between 5 to 10 minutes.""")
 
         label_consent.grid(row=0, column=0, sticky="nsew")
@@ -219,7 +219,7 @@ class CirclePage(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
         self.canvas = Canvas(master, width=1000, height=650)
-        self.circle_radius = 15
+        self.circle_radius = 30
         self.number_of_circles = 32
         self.circles = []
         self.click_count = 0
