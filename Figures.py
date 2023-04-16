@@ -1,5 +1,4 @@
 # Figures depicting the populated data
-import statistics
 import pandas
 import matplotlib.pyplot as plt
 
