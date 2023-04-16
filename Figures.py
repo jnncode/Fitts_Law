@@ -36,11 +36,25 @@ plt.title("Completion Time vs. Gender for Radius 15")
 plt.show()
 
 # Scatter Plot - Gender and Time > 30 Circle Radius
+data["Gender"] = data["Gender"].str.lower()
+gender_labels = {"female": "Female", "male": "Male", "other": "Other"}
+data["Gender"] = data["Gender"].replace(gender_labels)
+x = data["Gender"][10:]
+y = data["Completion Time(s)"][10:]
+plt.scatter(x, y, color="b")
+plt.xlabel("Gender")
+plt.ylabel("Time(s)")
+plt.title("Completion Time vs. Gender for Radius 15")
+plt.show()
 
 # Bar Graph - Average Inaccurate Clicks of 15 and 30 Circle Radius
 x_ticks = [15, 30]
 y1 = data["Inaccurate Clicks"][:10].mean() # Radius 15 
 y2 = data["Inaccurate Clicks"][10:].mean() # Radius 30
+
+# print(data["Inaccurate Clicks"][:10].mean()) - 10.1
+# print(data["Inaccurate Clicks"][10:].mean()) - 3.8
+
 width = 5
 plt.bar(x_ticks[0], y1, width=width, color="b")
 plt.bar(x_ticks[1], y2, width=width, color="r")
@@ -53,6 +67,10 @@ plt.show()
 # Bar Graph - Average Time of 15 and 30 Circle Radius
 x_ticks = [15, 30]
 y1 = data["Completion Time(s)"][:10].mean() # Radius 15 
+
+# print(data["Completion Time(s)"][:10].mean()) - 40.3305
+# print(data["Completion Time(s)"][10:].mean()) - 35.0960
+
 y2 = data["Completion Time(s)"][10:].mean() # Radius 30
 width = 5
 plt.bar(x_ticks[0], y1, width=width, color="b")
