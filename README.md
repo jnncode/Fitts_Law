@@ -7,3 +7,5 @@ CIS482: Human Computer Interactions - Fitts' Law Data Analysis
 - Accessibility and Ethical and Social Considerations
 - Prototyping and Iterative Design 
 
+### Deliverables
+Python
